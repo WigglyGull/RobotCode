@@ -1,20 +1,32 @@
-#include <HCSR04.h>
 #include <UcTTDcMotor.h>
 
-UcTTDcMotor motorL(D3, D9); // Instantiate a motor driver with forward and reverse pins
-UcTTDcMotor motorR(D10, D11); // Instantiate a motor driver with forward and reverse pins
+// Define pins
+#define MOTOR_PIN_LF 3
+#define MOTOR_PIN_LR 9
+#define MOTOR_PIN_RF 10
+#define MOTOR_PIN_RR 11
 
-int trigPin = 6;    // Trigger
-int echoPin = 7;    // Echo
-long duration, cm, inches;
+#define TRIGGER_PIN 6
+#define ECHO_PIN 7
+#define ENCODER_PIN_L 8
+#define ENCODER_PIN_R 9
+
+// Ratio between pulse return time and distance in cm
+const float DISTANCE_RATIO = 29.1;   
+
+// Define motor connections
+UcTTDcMotor motorL(MOTOR_PIN_LF, MOTOR_PIN_LR); 
+UcTTDcMotor motorR(MOTOR_PIN_RF, MOTOR_PIN_RR); 
+long duration;
+
  
 void setup() {
   //Serial Port begin
   Serial.begin (9600);
 
   //Define inputs and outputs
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+  pinMode(TRIGGER_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
 
   //Sets up motor
   motorL.init();  // Starts PWM @ ~31kHz
@@ -22,7 +34,7 @@ void setup() {
 }
  
 void loop() {
-  int distance = detectDistance();
+  int distance = pollDistance();
 
   if(distance <= 10){
     Serial.println("Stoping");
@@ -33,23 +45,23 @@ void loop() {
 }
 
 //returns distance from object in front in centermeters
-int detectDistance(){
+int pollDistance(){
   // The sensor is triggered by a HIGH pulse of 10 or more microseconds.
   // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
-  digitalWrite(trigPin, LOW);
+  digitalWrite(TRIGGER_PIN, LOW);
   delayMicroseconds(5);
-  digitalWrite(trigPin, HIGH);
+  digitalWrite(TRIGGER_PIN, HIGH);
   delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
+  digitalWrite(TRIGGER_PIN, LOW);
  
   // Read the signal from the sensor: a HIGH pulse whose
   // duration is the time (in microseconds) from the sending
   // of the ping to the reception of its echo off of an object.
-  pinMode(echoPin, INPUT);
-  duration = pulseIn(echoPin, HIGH);
+  pinMode(ECHO_PIN, INPUT);
+  duration = pulseIn(ECHO_PIN, HIGH);
  
   // Convert the time into a distance
-  return (duration/2) / 29.1;     // Divide by 29.1 or multiply by 0.0343
+  return (duration/2) / DISTANCE_RATIO;
 }
 
 void moveForward(int speed){
