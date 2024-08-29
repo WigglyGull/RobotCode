@@ -22,11 +22,13 @@ void setup() {
 }
  
 void loop() {
-  int distance = detectDistance;
-  moveForward(80);
-  if(distance <= 5){
-    motorL.stop();
-    motorR.stop();
+  int distance = detectDistance();
+
+  if(distance <= 10){
+    Serial.println("Stoping");
+    moveBack(60);
+  } else {
+    moveForward(60);
   }
 }
 
@@ -44,22 +46,25 @@ int detectDistance(){
   // duration is the time (in microseconds) from the sending
   // of the ping to the reception of its echo off of an object.
   pinMode(echoPin, INPUT);
-  duration = ulseIn(echoPin, HIGH);
+  duration = pulseIn(echoPin, HIGH);
  
   // Convert the time into a distance
   return (duration/2) / 29.1;     // Divide by 29.1 or multiply by 0.0343
 }
 
 void moveForward(int speed){
+  stop();
   motorL.forward(speed);
   motorR.reverse(speed); //is on backwards so is reversed
-  motorL.stop();
-  motorR.stop();
 }
 
 void moveBack(int speed){
+  stop();
   motorL.reverse(speed);
   motorR.forward(speed);  //is on backwards so is reversed
+}
+
+void stop(){
   motorL.stop();
   motorR.stop();
 }
