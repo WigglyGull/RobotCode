@@ -1,18 +1,20 @@
 #include <UcTTDcMotor.h>
 
 // Define pins
-#define MOTOR_PIN_LF 3
-#define MOTOR_PIN_LR 9
-#define MOTOR_PIN_RF 10
-#define MOTOR_PIN_RR 11
+const int MOTOR_PIN_LF = 3
+const int MOTOR_PIN_LR = 9
+const int MOTOR_PIN_RF = 10
+const int MOTOR_PIN_RR = 11
 
-#define TRIGGER_PIN 6
-#define ECHO_PIN 7
-#define ENCODER_PIN_L 8
-#define ENCODER_PIN_R 9
+const int TRIGGER_PIN = 6
+const int ECHO_PIN = 7
+const int ENCODER_PIN_L = 8
+const int ENCODER_PIN_R = 9
 
 // Ratio between pulse return time and distance in cm
 const float DISTANCE_RATIO = 29.1;   
+const int RPM_POLL_DURATION = 50; // How long to poll the encoders for RPM
+const int RPM_POLL_FREQUENCY = 50;
 
 // Define motor connections
 UcTTDcMotor motorL(MOTOR_PIN_LF, MOTOR_PIN_LR); 
@@ -20,7 +22,8 @@ UcTTDcMotor motorR(MOTOR_PIN_RF, MOTOR_PIN_RR);
 long duration;
 
  
-void setup() {
+void setup()
+{
   //Serial Port begin
   Serial.begin (9600);
 
@@ -33,7 +36,8 @@ void setup() {
   motorR.init();  // Starts PWM @ ~31kHz
 }
  
-void loop() {
+void loop()
+{
   int distance = pollDistance();
 
   if(distance <= 10){
@@ -45,7 +49,8 @@ void loop() {
 }
 
 //returns distance from object in front in centermeters
-int pollDistance(){
+int pollDistance()
+{
   // The sensor is triggered by a HIGH pulse of 10 or more microseconds.
   // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
   digitalWrite(TRIGGER_PIN, LOW);
@@ -64,7 +69,17 @@ int pollDistance(){
   return (duration/2) / DISTANCE_RATIO;
 }
 
-void moveForward(int speed){
+
+int pollRpm() {
+  // Poll the L and R motors for current RPM
+  // This function is BLOCKING for a specified RPM_POLL_DURATION !!
+  // Would need realtime support to avoid this. 
+
+}
+
+
+void moveForward(int speed)
+{
   stop();
   motorL.forward(speed);
   motorR.reverse(speed); //is on backwards so is reversed
