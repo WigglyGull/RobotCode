@@ -47,9 +47,18 @@ int pollDistance()
 
 int pollRpm() {
   // Poll the L and R motors for current RPM
-  // This function is BLOCKING for a specified RPM_POLL_DURATION !!
-  // Would need realtime support to avoid this. 
-
+  // Blocking for a specified RPM_POLL_DURATION.
+  uint32_t flashes = 0;
+  uint32_t end_time = millis() + RPM_POLL_DURATION;
+  while (millis() < end_time) { // can't be good
+    if ( digitalRead(8) ) { 
+      flashes++;
+      while (digitalRead(8)); // realllllly can't be good
+    }
+  }
+  Serial.println(flashes);
+  delay(60000);  // remove later.
+  return flashes;
 }
 
 void stop(){
