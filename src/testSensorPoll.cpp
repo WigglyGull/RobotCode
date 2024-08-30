@@ -14,26 +14,29 @@ const int ENCODER_PIN_R = 4;
 
 // Ratio between pulse return time and distance in cm
 const float DISTANCE_RATIO = 29.1;   
-const int RPM_POLL_DURATION = 50; // How long to poll the encoders for RPM
+
+// Encoder configuration
+const int RPM_POLL_DURATION = 1000; // How long to poll the encoders for RPM
 const int RPM_POLL_FREQUENCY = 50;
+const float INTERRUPTOR_SLOTS = 20; // Number of slots on the interruptor disc
 
 // Define motor connections
 UcTTDcMotor motorL(MOTOR_PIN_LF, MOTOR_PIN_LR); 
 UcTTDcMotor motorR(MOTOR_PIN_RF, MOTOR_PIN_RR); 
 long duration;
 
-int pollRpm() {
+float pollRpm(int encoderPin) {
   // Poll the L and R motors for current RPM
   // Blocking for a specified RPM_POLL_DURATION.
   uint32_t flashes = 0;
   uint32_t end_time = millis() + RPM_POLL_DURATION;
   while (millis() < end_time) { // can't be good
-    if ( digitalRead(8) ) { 
+    if ( digitalRead(encoderPin) ) { 
       flashes++;
-      while (digitalRead(8)); // realllllly can't be good
+      while (digitalRead(encoderPin)); // realllllly can't be good
     }
   }
-  return flashes;
+  return flashes / INTERRUPTOR_SLOTS;
 }
 
 void stop(){
@@ -72,8 +75,11 @@ void setup()
  
 void loop()
 {
-  moveForward(100);
-  Serial.println(pollRpm());
+  moveForward(20);
+  Serial.print("L Wheel: ");
+  Serial.println(pollRpm(ENCODER_PIN_L));
+  Serial.print("R Wheel: ");
+  Serial.println(pollRpm(ENCODER_PIN_R));
   stop();
   delay(6000);
 }
