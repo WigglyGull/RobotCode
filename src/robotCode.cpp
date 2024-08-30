@@ -1,15 +1,16 @@
+#include <Arduino.h>
 #include <UcTTDcMotor.h>
 
 // Define pins
-const int MOTOR_PIN_LF = 3
-const int MOTOR_PIN_LR = 9
-const int MOTOR_PIN_RF = 10
-const int MOTOR_PIN_RR = 11
+const PwmPin MOTOR_PIN_LF = D3;
+const PwmPin MOTOR_PIN_LR = D9;
+const PwmPin MOTOR_PIN_RF = D10;
+const PwmPin MOTOR_PIN_RR = D11;
 
-const int TRIGGER_PIN = 6
-const int ECHO_PIN = 7
-const int ENCODER_PIN_L = 8
-const int ENCODER_PIN_R = 9
+const int TRIGGER_PIN = 6;
+const int ECHO_PIN = 7;
+const int ENCODER_PIN_L = 8;
+const int ENCODER_PIN_R = 9;
 
 // Ratio between pulse return time and distance in cm
 const float DISTANCE_RATIO = 29.1;   
@@ -21,32 +22,6 @@ UcTTDcMotor motorL(MOTOR_PIN_LF, MOTOR_PIN_LR);
 UcTTDcMotor motorR(MOTOR_PIN_RF, MOTOR_PIN_RR); 
 long duration;
 
- 
-void setup()
-{
-  //Serial Port begin
-  Serial.begin (9600);
-
-  //Define inputs and outputs
-  pinMode(TRIGGER_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
-
-  //Sets up motor
-  motorL.init();  // Starts PWM @ ~31kHz
-  motorR.init();  // Starts PWM @ ~31kHz
-}
- 
-void loop()
-{
-  int distance = pollDistance();
-
-  if(distance <= 10){
-    Serial.println("Stoping");
-    moveBack(60);
-  } else {
-    moveForward(60);
-  }
-}
 
 //returns distance from object in front in centermeters
 int pollDistance()
@@ -77,6 +52,11 @@ int pollRpm() {
 
 }
 
+void stop(){
+  motorL.stop();
+  motorR.stop();
+}
+
 
 void moveForward(int speed)
 {
@@ -91,7 +71,28 @@ void moveBack(int speed){
   motorR.forward(speed);  //is on backwards so is reversed
 }
 
-void stop(){
-  motorL.stop();
-  motorR.stop();
+void setup()
+{
+  //Serial Port begin
+  Serial.begin (9600);
+
+  //Define inputs and outputs
+  pinMode(TRIGGER_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  //Sets up motor
+  motorL.init();  // Starts PWM @ ~31kHz
+  motorR.init();  // Starts PWM @ ~31kHz
+}
+ 
+void loop()
+{
+  int distance = pollDistance();
+
+  if(distance <= 10){
+    Serial.println("Stoping");
+    moveBack(60);
+  } else {
+    moveForward(60);
+  }
 }
