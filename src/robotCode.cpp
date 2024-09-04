@@ -63,6 +63,7 @@ void setup()
  
 void loop()
 {
+  /*
   int distance = pollDistance();
 
   if(distance <= 10){
@@ -71,4 +72,7 @@ void loop()
   } else {
     motorController.forward(60);
   }
+  */
+  motorController.turnRobotByDegrees(45);
+  delay(5000);
 }

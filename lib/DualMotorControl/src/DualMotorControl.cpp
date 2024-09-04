@@ -56,37 +56,37 @@ void DualMotorControl::stepDualMotor(bool reverse, bool pivot, uint8_t steps)
 
     if ( reverse ) {
         if ( pivot ) {
-            DualMotorControl::leftMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
-        } else {
             DualMotorControl::leftMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
+        } else {
+            DualMotorControl::leftMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
         }
-        DualMotorControl::rightMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
+        DualMotorControl::rightMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
     } else {
         if ( pivot ) {
-            DualMotorControl::rightMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
-        } else {
             DualMotorControl::rightMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
+        } else {
+            DualMotorControl::rightMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
         }
         DualMotorControl::leftMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
     }
 
-    while (1) { 
+    while (flashesLeft < steps || flashesRight < steps) { 
         if ( digitalRead(DualMotorControl::leftEncoder) ) {
             if (!lockLeft) {
-                flashesLeft++;
-                lockRight = 1;
-            }
-        } else {
-            lockRight = 0;
-        }
-
-        if ( digitalRead(DualMotorControl::rightEncoder) ) {
-            if (!lockRight) {
                 flashesLeft++;
                 lockLeft = 1;
             }
         } else {
             lockLeft = 0;
+        }
+
+        if ( digitalRead(DualMotorControl::rightEncoder) ) {
+            if (!lockRight) {
+                flashesRight++;
+                lockRight = 1;
+            }
+        } else {
+            lockRight = 0;
         }
 
         if (flashesLeft >= steps) {

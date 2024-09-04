@@ -33,8 +33,8 @@ class DualMotorControl {
     int leftEncoder;
     int rightEncoder;
 
-    const int MOTOR_DUTY_CYCLE = 40;
-    const float CLICKS_PER_DEGREE = 0.25;
+    const int MOTOR_DUTY_CYCLE = 45; // motors LOVE to stall below 50
+    const float CLICKS_PER_DEGREE = 0.35;
 
     void stepMotor(UcTTDcMotor motor, int encoder, bool reverse, uint8_t steps);
     void stepDualMotor(bool reverse, bool pivot, uint8_t steps);
