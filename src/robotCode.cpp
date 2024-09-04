@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <UcTTDcMotor.h>
 
+#include "DualMotorControl.h"
+
 // Define pins
 const PwmPin MOTOR_PIN_LF = D3;
 const PwmPin MOTOR_PIN_LR = D9;
@@ -20,6 +22,7 @@ const int RPM_POLL_FREQUENCY = 50;
 // Define motor connections
 UcTTDcMotor motorL(MOTOR_PIN_LF, MOTOR_PIN_LR); 
 UcTTDcMotor motorR(MOTOR_PIN_RF, MOTOR_PIN_RR); 
+DualMotorControl motorController(&motorL, &motorR, ENCODER_PIN_L, ENCODER_PIN_R); 
 long duration;
 
 
@@ -44,42 +47,6 @@ int pollDistance()
   return (duration/2) / DISTANCE_RATIO;
 }
 
-
-int pollRpm() {
-  // Poll the L and R motors for current RPM
-  // Blocking for a specified RPM_POLL_DURATION.
-  uint32_t flashes = 0;
-  uint32_t end_time = millis() + RPM_POLL_DURATION;
-  while (millis() < end_time) { // can't be good
-    if ( digitalRead(8) ) { 
-      flashes++;
-      while (digitalRead(8)); // realllllly can't be good
-    }
-  }
-  Serial.println(flashes);
-  delay(60000);  // remove later.
-  return flashes;
-}
-
-void stop(){
-  motorL.stop();
-  motorR.stop();
-}
-
-
-void moveForward(int speed)
-{
-  stop();
-  motorL.forward(speed);
-  motorR.reverse(speed); //is on backwards so is reversed
-}
-
-void moveBack(int speed){
-  stop();
-  motorL.reverse(speed);
-  motorR.forward(speed);  //is on backwards so is reversed
-}
-
 void setup()
 {
   //Serial Port begin
@@ -100,8 +67,8 @@ void loop()
 
   if(distance <= 10){
     Serial.println("Stoping");
-    moveBack(60);
+    motorController.reverse(60);
   } else {
-    moveForward(60);
+    motorController.forward(60);
   }
 }
