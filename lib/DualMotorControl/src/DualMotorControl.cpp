@@ -63,11 +63,11 @@ void DualMotorControl::stepDualMotor(bool reverse, bool pivot, uint8_t steps)
         DualMotorControl::rightMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
     } else {
         if ( pivot ) {
-            DualMotorControl::rightMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
-        } else {
             DualMotorControl::rightMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
+        } else {
+            DualMotorControl::rightMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
         }
-        DualMotorControl::leftMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
+        DualMotorControl::leftMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
     }
 
     while (flashesLeft < steps || flashesRight < steps) { 
@@ -119,10 +119,8 @@ void DualMotorControl::turnRobotByDegrees(int8_t degrees)
      * Pivot robot a defined number of degrees.
     */ 
     if (degrees > 0) {
-        Serial.print("Left");
         stepDualMotor(0, 1, degrees * DualMotorControl::CLICKS_PER_DEGREE);
     } else {
-        Serial.print("Right");
         stepDualMotor(1, 1, degrees * DualMotorControl::CLICKS_PER_DEGREE);
     }
 }
