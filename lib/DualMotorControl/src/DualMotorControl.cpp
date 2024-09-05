@@ -47,13 +47,17 @@ void DualMotorControl::stepDualMotor(bool reverse, bool pivot, uint8_t steps)
      * Move both motors a set number of steps.
      * Blocking function!
     */ 
+
+   // Stop the motors before beginning new motion
     stop();
 
+    // Define encoder counting functions
     uint8_t flashesLeft = 0;
     uint8_t flashesRight = 0;
     bool lockLeft = 0;
     bool lockRight = 0;
 
+    // Set the motors moving in the directions defined by reverse and pivot booleans
     if ( reverse ) {
         if ( pivot ) {
             DualMotorControl::leftMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
@@ -70,7 +74,9 @@ void DualMotorControl::stepDualMotor(bool reverse, bool pivot, uint8_t steps)
         DualMotorControl::leftMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
     }
 
+    // Move both motors, stopping each one after they have moved past the specified distance
     while (flashesLeft < steps || flashesRight < steps) { 
+        // Increase L counter if a new flash has occurred
         if ( digitalRead(DualMotorControl::leftEncoder) ) {
             if (!lockLeft) {
                 flashesLeft++;
@@ -80,6 +86,7 @@ void DualMotorControl::stepDualMotor(bool reverse, bool pivot, uint8_t steps)
             lockLeft = 0;
         }
 
+        // Increase R counter if a new flash has occurred
         if ( digitalRead(DualMotorControl::rightEncoder) ) {
             if (!lockRight) {
                 flashesRight++;
@@ -89,6 +96,7 @@ void DualMotorControl::stepDualMotor(bool reverse, bool pivot, uint8_t steps)
             lockRight = 0;
         }
 
+        // Stop the motors if enough flashes have occurred
         if (flashesLeft >= steps) {
             DualMotorControl::leftMotor->stop();
         }
