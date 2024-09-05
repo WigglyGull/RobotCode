@@ -119,8 +119,10 @@ void DualMotorControl::turnRobotByDegrees(int8_t degrees)
      * Pivot robot a defined number of degrees.
     */ 
     if (degrees > 0) {
+        Serial.print("Left");
         stepDualMotor(0, 1, degrees * DualMotorControl::CLICKS_PER_DEGREE);
     } else {
+        Serial.print("Right");
         stepDualMotor(1, 1, degrees * DualMotorControl::CLICKS_PER_DEGREE);
     }
 }
