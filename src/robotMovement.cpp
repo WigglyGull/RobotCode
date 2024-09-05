@@ -1,3 +1,4 @@
+#include <HardwareSerial.h>
 #include <Arduino.h>
 #include <UcTTDcMotor.h>
 
@@ -9,8 +10,8 @@ const PwmPin MOTOR_PIN_LR = D9;
 const PwmPin MOTOR_PIN_RF = D10;
 const PwmPin MOTOR_PIN_RR = D11;
 
-const int TRIGGER_PIN = 6;
-const int ECHO_PIN = 7;
+const int TRIGGER_PIN = 7;
+const int ECHO_PIN = 6;
 const int ENCODER_PIN_L = 2;
 const int ENCODER_PIN_R = 4;
 
@@ -25,7 +26,7 @@ UcTTDcMotor motorR(MOTOR_PIN_RF, MOTOR_PIN_RR);
 DualMotorControl motorController(&motorL, &motorR, ENCODER_PIN_L, ENCODER_PIN_R); 
 long duration;
 
-
+//Code to get distance without a libary code based on  forum post https://forum.arduino.cc/t/code-to-use-ultrasonic-sensors-without-pulsein-function-or-newping-library/354239
 //returns distance from object in front in centermeters
 int pollDistance()
 {
@@ -47,8 +48,7 @@ int pollDistance()
   return (duration/2) / DISTANCE_RATIO;
 }
 
-void setup()
-{
+void setup() {
   //Serial Port begin
   Serial.begin (9600);
 
@@ -60,19 +60,34 @@ void setup()
   motorL.init();  // Starts PWM @ ~31kHz
   motorR.init();  // Starts PWM @ ~31kHz
 }
- 
-void loop()
-{
-  /*
-  int distance = pollDistance();
 
-  if(distance <= 10){
-    Serial.println("Stoping");
-    motorController.reverse(60);
-  } else {
-    motorController.forward(60);
-  }
-  */
-  motorController.turnRobotByDegrees(45);
-  delay(5000);
+void loop() {
+    //Stops and cancles all movement if sensors pick up an object within 5cm
+    int distance = pollDistance();
+    if(distance <= 10){
+        motorController.stop();
+        Serial.read(); //stops it reading input and excuting it after the hazard is removed
+        Serial.print("Hazard Warning");
+        return;
+    }
+
+    //Moves Arduino based on 
+    if (Serial.available() > 0) {
+        char command = Serial.read();
+        Serial.print(command);
+
+        if (command == 'W' || command == 'w') {
+            motorController.forward(50);
+        } else if (command == 'S' || command == 's') {
+            motorController.reverse(50);
+        } else if (command == 'A' || command == 'a') {
+            motorController.turnRobotByDegrees(1);
+        } else if (command == 'D' || command == 'd') {
+            motorController.turnRobotByDegrees(-1);
+        } 
+    } else {
+        motorController.stop();
+    }
+
+    delay(50);
 }
