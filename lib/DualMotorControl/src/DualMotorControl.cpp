@@ -139,8 +139,8 @@ void DualMotorControl::forward(uint8_t speed)
      * Move the robot forwards, ignoring encoders.
     */ 
     stop();
-    DualMotorControl::leftMotor->forward(speed);
-    DualMotorControl::rightMotor->reverse(speed);
+    DualMotorControl::leftMotor->forward((int) (speed * DualMotorControl::leftDutyOffset));
+    DualMotorControl::rightMotor->reverse((int) (speed * DualMotorControl::rightDutyOffset));
 }
 
 
@@ -150,8 +150,8 @@ void DualMotorControl::reverse(uint8_t speed)
      * Move the robot backwards, ignoring encoders.
     */
     stop();
-    DualMotorControl::leftMotor->reverse(speed);
-    DualMotorControl::rightMotor->forward(speed);
+    DualMotorControl::leftMotor->reverse((int) (speed * DualMotorControl::leftDutyOffset));
+    DualMotorControl::rightMotor->forward((int) (speed * DualMotorControl::rightDutyOffset));
 }
 
 
@@ -162,4 +162,24 @@ void DualMotorControl::stop()
     */
     DualMotorControl::leftMotor->stop();
     DualMotorControl::rightMotor->stop();
+}
+
+void DualMotorControl::setLeftDutyOffset(float offset)
+{
+    /*
+    * Set a multiplier (between 0 and 1) for the duty cycle of the L motor
+    * Allows compensation for a drunk robot
+    * Speaking of I'm quite drunk
+    * But https://xkcd.com/323/
+    */
+    DualMotorControl::leftDutyOffset = offset;
+}
+
+void DualMotorControl::setRightDutyOffset(float offset)
+{
+    /*
+    * Set a multiplier (between 0 and 1) for the duty cycle of the L motor
+    * Allows compensation for a drunk robot
+    */
+    DualMotorControl::rightDutyOffset = offset;
 }

@@ -21,8 +21,6 @@ const int LEDS[3] = {FORWARD_LED, TURN_LED, HAZARD_LED};
 
 // Ratio between pulse return time and distance in cm
 const float DISTANCE_RATIO = 29.1;   
-const int RPM_POLL_DURATION = 50; // How long to poll the encoders for RPM
-const int RPM_POLL_FREQUENCY = 50;
 
 // Define motor connections
 UcTTDcMotor motorL(MOTOR_PIN_LF, MOTOR_PIN_LR); 
@@ -68,6 +66,7 @@ void setup() {
   motorR.init();  // Starts PWM @ ~31kHz
 }
 
+
 bool hasStopped = false;
 void loop() {
     //Turn leds off
@@ -91,7 +90,7 @@ void loop() {
     //Moves Arduino based on WASD
     if (Serial.available() > 0) {
         char command = Serial.read();
-        int speed = isUpperCase(command) ? 40 : 80;
+        int speed = isUpperCase(command) ? 60 : 100;
         hasStopped = false;
 
         if (command == 'W' || command == 'w') {

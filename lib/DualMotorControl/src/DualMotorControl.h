@@ -25,6 +25,8 @@ class DualMotorControl {
     
     void moveRobot(int8_t steps);
     void turnRobotByDegrees(int8_t degrees);
+    void setLeftDutyOffset(float offset);
+    void setRightDutyOffset(float offset);
 
 
   private:
@@ -32,6 +34,8 @@ class DualMotorControl {
     UcTTDcMotor* rightMotor;
     int leftEncoder;
     int rightEncoder;
+    float leftDutyOffset;
+    float rightDutyOffset;
 
     const int MOTOR_DUTY_CYCLE = 45; // motors LOVE to stall below 50
     const float CLICKS_PER_DEGREE = 0.35;

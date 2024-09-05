@@ -1,0 +1,7 @@
+- Motor speed compensation for straight line
+- More command modes
+    - Forward until obstacle
+    - Turn x degrees
+- Distance feedback
+- Wheel slip detection
+- Wheel stall detection
