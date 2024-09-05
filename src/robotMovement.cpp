@@ -1,7 +1,6 @@
 #include <HardwareSerial.h>
 #include <Arduino.h>
 #include <UcTTDcMotor.h>
-
 #include "DualMotorControl.h"
 
 // Define pins
@@ -14,6 +13,10 @@ const int TRIGGER_PIN = 7;
 const int ECHO_PIN = 6;
 const int ENCODER_PIN_L = 2;
 const int ENCODER_PIN_R = 4;
+
+const int FORWARD_LED = 13;
+const int TURN_LED = 12;
+const int HAZARD_LED = 8;
 
 // Ratio between pulse return time and distance in cm
 const float DISTANCE_RATIO = 29.1;   
@@ -61,25 +64,31 @@ void setup() {
   motorR.init();  // Starts PWM @ ~31kHz
 }
 
+bool hasStopped = false;
 void loop() {
     //Stops and cancles all movement if sensors pick up an object within 5cm
     int distance = pollDistance();
     if(distance <= 10){
+        if(!hasStopped){
+            hasStopped = true;
+            Serial.print("Hazard detected please move");
+        }
         motorController.stop();
         Serial.read(); //stops it reading input and excuting it after the hazard is removed
-        Serial.print("Hazard Warning");
         return;
     }
-
-    //Moves Arduino based on 
+    
+    //Moves Arduino based on WASD
+    
     if (Serial.available() > 0) {
         char command = Serial.read();
-        Serial.print(command);
+        int speed = isUpperCase(command) ? 40 : 80;
+        hasStopped = false;
 
         if (command == 'W' || command == 'w') {
-            motorController.forward(50);
+            motorController.forward(speed);
         } else if (command == 'S' || command == 's') {
-            motorController.reverse(50);
+            motorController.reverse(speed);
         } else if (command == 'A' || command == 'a') {
             motorController.turnRobotByDegrees(1);
         } else if (command == 'D' || command == 'd') {
