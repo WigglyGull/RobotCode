@@ -60,18 +60,22 @@ void DualMotorControl::stepDualMotor(bool reverse, bool pivot, uint8_t steps)
     // Set the motors moving in the directions defined by reverse and pivot booleans
     if ( reverse ) {
         if ( pivot ) {
-            DualMotorControl::leftMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
-        } else {
-            DualMotorControl::leftMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
-        }
-        DualMotorControl::rightMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
-    } else {
-        if ( pivot ) {
             DualMotorControl::rightMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
         } else {
+            
             DualMotorControl::rightMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
         }
         DualMotorControl::leftMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
+        
+    } else {
+        if ( pivot ) {
+            DualMotorControl::rightMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
+            
+        } else {
+            DualMotorControl::rightMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
+        }
+        DualMotorControl::leftMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
+        
     }
 
     // Move both motors, stopping each one after they have moved past the specified distance
@@ -116,6 +120,7 @@ void DualMotorControl::moveRobot(int8_t steps)
     if (steps > 0) {
         stepDualMotor(0, 0, steps);
     } else {
+        Serial.println("Reversing???");
         stepDualMotor(1, 0, -1 * steps);
     }
 }
@@ -129,7 +134,7 @@ void DualMotorControl::turnRobotByDegrees(int8_t degrees)
     if (degrees > 0) {
         stepDualMotor(0, 1, degrees * DualMotorControl::CLICKS_PER_DEGREE);
     } else {
-        stepDualMotor(1, 1, degrees * DualMotorControl::CLICKS_PER_DEGREE);
+        stepDualMotor(1, 1, -1 * degrees * DualMotorControl::CLICKS_PER_DEGREE);
     }
 }
 
@@ -169,8 +174,6 @@ void DualMotorControl::setLeftDutyOffset(float offset)
     /*
     * Set a multiplier (between 0 and 1) for the duty cycle of the L motor
     * Allows compensation for a drunk robot
-    * Speaking of I'm quite drunk
-    * But https://xkcd.com/323/
     */
     DualMotorControl::leftDutyOffset = offset;
 }
@@ -182,4 +185,18 @@ void DualMotorControl::setRightDutyOffset(float offset)
     * Allows compensation for a drunk robot
     */
     DualMotorControl::rightDutyOffset = offset;
+}
+
+void DualMotorControl::turnLeft(uint8_t speed)
+{
+    stop();
+    DualMotorControl::leftMotor->forward((int) (speed * DualMotorControl::leftDutyOffset));
+    DualMotorControl::rightMotor->forward((int) (speed * DualMotorControl::rightDutyOffset));
+
+}
+void DualMotorControl::turnRight(uint8_t speed)
+{
+    stop();
+    DualMotorControl::leftMotor->reverse((int) (speed * DualMotorControl::leftDutyOffset));
+    DualMotorControl::rightMotor->reverse((int) (speed * DualMotorControl::rightDutyOffset));
 }

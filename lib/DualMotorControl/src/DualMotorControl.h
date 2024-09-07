@@ -21,6 +21,8 @@ class DualMotorControl {
                       leftMotor(leftMotor), rightMotor(rightMotor), leftEncoder(leftEncoder), rightEncoder(rightEncoder) { };
     void forward(uint8_t speed);
     void reverse(uint8_t speed);
+    void turnLeft(uint8_t speed);
+    void turnRight(uint8_t speed);
     void stop();
     
     void moveRobot(int8_t steps);
@@ -34,10 +36,10 @@ class DualMotorControl {
     UcTTDcMotor* rightMotor;
     int leftEncoder;
     int rightEncoder;
-    float leftDutyOffset;
-    float rightDutyOffset;
+    float leftDutyOffset = 1;
+    float rightDutyOffset = 1;
 
-    const int MOTOR_DUTY_CYCLE = 45; // motors LOVE to stall below 50
+    const int MOTOR_DUTY_CYCLE = 60; // motors LOVE to stall below 50
     const float CLICKS_PER_DEGREE = 0.35;
 
     void stepMotor(UcTTDcMotor motor, int encoder, bool reverse, uint8_t steps);
