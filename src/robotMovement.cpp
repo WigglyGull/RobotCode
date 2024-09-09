@@ -26,6 +26,8 @@ const char controlCommand[8] = "control";
 const char moveCommand[5] = "move";
 const char turnCommand[5] = "turn";
 const char distanceCommand[9] = "distance";
+const char stopCommand[5] = "stop";
+const char searchCommand[7] = "search";
 
 size_t commandLength = 0;
 char buffer;
@@ -69,7 +71,24 @@ void printDistance()
 {
     Serial.print("Nearest obstacle: ");
     Serial.print(pollDistance());
-    Serial.print("cm\n");
+    Serial.print("cm\n\r");
+}
+
+int distance;
+size_t noInputTime = 0;
+
+void search() {
+    motorController.forward(60);
+    for(size_t i = 0; i < 200; i++) {
+        if (pollDistance() <= 10) {
+            Serial.print("Obstacle Found! Stopping.\n\r");
+            motorController.stop();
+            return;
+        }
+        delay(50);
+    }
+    Serial.print("Timed out finding obstacle. Stopping.\n\r");
+    motorController.stop();
 }
 
 void startInteractiveMode()
@@ -78,48 +97,43 @@ void startInteractiveMode()
     * Runs the robot in "interactive" mode - WASD controls, hold shift to move slower.
     */
 
-    Serial.println("Interactive mode: \n- Use WASD to move\n- Hold shift to move slower\n-Press Ctrl+D to exit\n\n");
-
-    
-
-    //Turn leds off
-    // This needs to not happen, need to "latch" on or off
-    for (int i = 0; i < 2; i++){
-        digitalWrite(LEDS[i], LOW);  
-    }
-
+    Serial.println("Interactive mode: \n- Use WASD to move\n- Hold shift to move slower\n-Press 'x' to exit\n\n\r");
 
     //Stops and cancles all movement if sensors pick up an object within 5cm
     // Should only check this if W pressed
-    int distance = pollDistance();
-    if(distance <= 10){
-        if(!hasStopped){
-            hasStopped = true;
-            Serial.print("Hazard detected please move");
-        }
-        motorController.stop();
-        Serial.read(); //stops it reading input and excuting it after the hazard is removed
-        digitalWrite(HAZARD_LED, HIGH); 
-        return;
-    }
     
+
     //Moves Arduino based on WASD
-    while (buffer != -1) {
+    while (buffer != 'x') {
+        //Serial.print("yo");
         
 
         if ( Serial.available() ) {
+            noInputTime = 0;
             // We have a command available. Read it to memory
             buffer = Serial.read();
 
-            int speed = isUpperCase(buffer) ? 60 : 100;
+            int speed = isUpperCase(buffer) ? 40 : 100;
             hasStopped = false;
 
+
             if (buffer == 'W' || buffer == 'w') {
-                if (currentCommand != 'w') {
+                if (currentCommand != 'w' && currentCommand != 'h') {
                     currentCommand = 'w';
                     motorController.forward(speed);
                     digitalWrite(FORWARD_LED, HIGH); 
                 }
+
+                distance = pollDistance();
+                if(distance <= 10){
+                    if (currentCommand == 'w') {
+                        Serial.println("Hazard detected! Please reverse.\r\n");
+                        currentCommand = 'h';
+                    }
+                    motorController.stop();
+                    digitalWrite(HAZARD_LED, HIGH); 
+                }
+    
             } else if (buffer == 'S' || buffer == 's') {
                 if (currentCommand != 's') {
                     currentCommand = 's';
@@ -142,10 +156,17 @@ void startInteractiveMode()
             }
             
         } else {
-            currentCommand = 'n';
-            motorController.stop();
+            if (noInputTime > 20) {
+                currentCommand = 'n';
+                motorController.stop();
+                for (int i = 0; i <= 2; i++){
+                    digitalWrite(LEDS[i], LOW);  
+                }
+            } else {
+                noInputTime++;
+            }
         }
-        delay(50);
+        delay(5);
     }
 }
 
@@ -157,6 +178,7 @@ void readToBuffer(char* currentCommand) {
         while ( !Serial.available() ) {} 
         buffer = Serial.read();
         Serial.print(buffer);
+
         if ( commandLength < 32 ) {
             if ( buffer == 8 && commandLength > 0) {
                 commandLength--;
@@ -167,28 +189,28 @@ void readToBuffer(char* currentCommand) {
         }
 
     } while (buffer != 10 && buffer != 13);    
+    currentCommand[commandLength] = '\0';
 }
 
 
 void console()
 {
     char currentCommand[32] = {0};
-
-    Serial.print("> ");
+    Serial.print(">");
     readToBuffer(currentCommand);
 
 
     if ( memcmp(&currentCommand, &helpCommand, 4) == 0 ) {
-        Serial.println("Available commands:");
-        Serial.println("    control - Start interactive control of the robot");
-        Serial.println("    move - Move the robot a specified distance");
-        Serial.println("    turn - Turn the robot a specified number of degrees");
-        Serial.println("    distance - Display the distance to the nearest obstacle in front of the robot");
+        Serial.println("\nAvailable commands:");
+        Serial.println("    control - Start interactive control of the robot\r");
+        Serial.println("    move - Move the robot a specified distance\r");
+        Serial.println("    turn - Turn the robot a specified number of degrees\r");
+        Serial.println("    distance - Display the distance to the nearest obstacle in front of the robot\n\r");
 
     } else if ( memcmp(&currentCommand, &distanceCommand, 8) == 0 ) {
         Serial.print("Closest obstacle: ");
         Serial.print(pollDistance());
-        Serial.println("cm\n");
+        Serial.println("cm\n\r");
 
     } else if ( memcmp(&currentCommand, &controlCommand, 7) == 0 ) {
         startInteractiveMode();
@@ -201,9 +223,10 @@ void console()
 
     } else if ( memcmp(&currentCommand, &distanceCommand, 8) == 0 ) {
         printDistance();
-
-    } else {
-        Serial.println("Unrecognised command. Type 'help' for a list of commands");
+    } else if ( memcmp(&currentCommand, &stopCommand, 4) == 0 ) {
+        motorController.stop();
+    } else if ( memcmp(&currentCommand, &searchCommand, 6) == 0 ) {
+        search();
     }
 }
 
@@ -225,7 +248,7 @@ void setup()
   motorL.init();  // Starts PWM @ ~31kHz
   motorR.init();  // Starts PWM @ ~31kHz
 
-  Serial.print("Robot Connected! Type 'help' for a list of commands\n\n");
+  Serial.print("Robot Connected! Type 'help' for a list of commands\n\n\r");
 }
 
 
@@ -234,7 +257,6 @@ void setup()
 void loop() 
 {
     console();
-    delay(50);
 }
 
 // Command interface

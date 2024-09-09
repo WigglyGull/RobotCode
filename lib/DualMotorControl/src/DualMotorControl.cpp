@@ -120,7 +120,6 @@ void DualMotorControl::moveRobot(int8_t steps)
     if (steps > 0) {
         stepDualMotor(0, 0, steps);
     } else {
-        Serial.println("Reversing???");
         stepDualMotor(1, 0, -1 * steps);
     }
 }
