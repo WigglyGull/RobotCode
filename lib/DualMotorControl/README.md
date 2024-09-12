@@ -6,3 +6,4 @@ Extension of Allan McInnes' UcTTDcMotor library, adding further abstraction for 
  - "Fast" forward, reverse and turn functions for use with two motors.
  - "Accurate" forward, reverse and turn functions for use with two motors and two rotary encoders.
  - The ability to set offsets the power of each motor, used by all motion functions, to offset unbalanced velocities on each wheel.  
+ - Indicator LED support

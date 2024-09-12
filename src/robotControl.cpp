@@ -244,14 +244,9 @@ class CommandInterface {
             Serial.print(">");
             readToBuffer(currentCommand);
 
-
             // Compare the array of chars we read with the known commands we have stored, and perform the action.
             if ( memcmp(&currentCommand, &helpCommand, 4) == 0 ) {
-                Serial.println("\nAvailable commands:");
-                Serial.println("    control - Start interactive control of the robot\r");
-                Serial.println("    move - Move the robot a specified distance\r");
-                Serial.println("    turn - Turn the robot a specified number of degrees\r");
-                Serial.println("    distance - Display the distance to the nearest obstacle in front of the robot\n\r");
+                printHelp();
 
             } else if ( memcmp(&currentCommand, &controlCommand, 7) == 0 ) {
                 control.start();
@@ -270,6 +265,8 @@ class CommandInterface {
 
             } else if ( memcmp(&currentCommand, &searchCommand, 6) == 0 ) {
                 interactions.search();
+            } else {
+                Serial.println("Command not recognised. Type 'help' for a list of commands");
             }
         } // console
 
@@ -310,13 +307,24 @@ class CommandInterface {
                         commandLength++;
                     }
                 }
-
             } 
 
             // Break on newline or carriage return
             while (buffer != 10 && buffer != 13);
             currentCommand[commandLength] = '\0';
         } // readToBuffer
+
+        void printHelp() {
+            /*
+            * Print the help message to the console
+            */
+            Serial.println("\nAvailable commands:");
+            Serial.println("    control - Start interactive control of the robot\r");
+            Serial.println("    move - Move the robot a specified distance\r");
+            Serial.println("    turn - Turn the robot a specified number of degrees\r");
+            Serial.println("    distance - Display the distance to the nearest obstacle in front of the robot\n\r");
+        } // printHelp
+
 }; // CommandInterface
 
 
