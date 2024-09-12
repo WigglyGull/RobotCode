@@ -14,7 +14,7 @@
 #include <UcTTDcMotor.h>
 #include "DualMotorControl.h"
 
-// Define pins
+// Pin definitions
 const PwmPin MOTOR_PIN_LF = D3;
 const PwmPin MOTOR_PIN_LR = D9;
 const PwmPin MOTOR_PIN_RF = D10;
@@ -29,12 +29,19 @@ const int FORWARD_LED = 13;
 const int TURN_LED = 12;
 const int HAZARD_LED = 8;
 
+// Configurable constants
+const uint8_t DISTANCE_THRESHOLD = 10;  // How close in cm to get to an obstacle before identifying it as a hazard 
+const uint8_t SERIAL_POLL_DELAY = 5;          // Gap in ms between polling serial in control mode
+const uint8_t SERIAL_STOP_DELAY = 20;         // How many SERIAL_POLL_DELAYS to wait before deciding a key has been released, and stopping the motors
+const uint8_t FAST_SPEED = 100;               // Duty cycle of the motors when the robot is travelling fast in control mode
+const uint8_t SLOW_SPEED = 40;                // Duty cycle of the motors when the robot is travelling slow in control mode
+
 // Define motor connections
 UcTTDcMotor motorL(MOTOR_PIN_LF, MOTOR_PIN_LR); 
 UcTTDcMotor motorR(MOTOR_PIN_RF, MOTOR_PIN_RR); 
 
 // Configure the dualMotorControl library with pointers to our motor definitions, encoders and LEDs
-DualMotorControl motorController(&motorL, &motorR, ENCODER_PIN_L, ENCODER_PIN_R); 
+DualMotorControl motorController(&motorL, &motorR, ENCODER_PIN_L, ENCODER_PIN_R, FORWARD_LED, TURN_LED); 
 
 
 class Interactions {
@@ -64,8 +71,14 @@ class Interactions {
             duration = pulseIn(ECHO_PIN, HIGH);
             
             // Convert the time into a distance
+            if ((duration/2) / DISTANCE_RATIO < DISTANCE_THRESHOLD) {
+                digitalWrite(HAZARD_LED, 1);
+            } else {
+                digitalWrite(HAZARD_LED, 0);
+            }
+
             return (duration/2) / DISTANCE_RATIO;
-        }
+        } // pollDistance
 
         void printDistance()
         {
@@ -75,7 +88,7 @@ class Interactions {
             Serial.print("Nearest obstacle: ");
             Serial.print(pollDistance());
             Serial.print("cm\n\r");
-        }
+        } // printDistance
 
         void search() 
         {
@@ -93,13 +106,14 @@ class Interactions {
             }
             Serial.print("Timed out finding obstacle. Stopping.\n\r");
             motorController.stop();
-        }   
+        } // search
+
     private:
         // Ratio between pulse return time and distance in cm
         const float DISTANCE_RATIO = 29.1; 
         long duration;
 
-};
+}; // Interactions
     
 
 class Control {
@@ -130,9 +144,7 @@ class Control {
                 currentCommand = 'w';
                 motorController.forward(speed);
             }
-
-           
-        }
+        } // forwardSafely
 
         void handleKeypress() {
             /*
@@ -170,7 +182,7 @@ class Control {
                     break;
                     
             }
-        }
+        } // handleKeyPress
 
         void start()
         {
@@ -184,40 +196,38 @@ class Control {
             // While the user hasn't requested to exit, read a new key if available
             while (buffer != 'x') {
                 if ( Serial.available() ) {
+                    // Reset the time since the last input was received, read the new char
                     noInputTime = 0;
-                    // We have a command available. Read it to memory
                     buffer = Serial.read();
 
-                    speed = isUpperCase(buffer) ? 40 : 100; // need to move these!!!
+                    // Determine the speed of motion and use the keypress handler to determine the direction of motion
+                    speed = isUpperCase(buffer) ? SLOW_SPEED : FAST_SPEED;
                     handleKeypress();
+
+                // If the last time serial was available exceeds a threshold, stop the motors.
+                // Otherwise, increase the time since we last received a command.
                 } else {
-                    if (noInputTime > 20) {
+                    if (noInputTime > SERIAL_STOP_DELAY) {
                             currentCommand = 'n';
                         } else {
                             noInputTime++;
                         }
                 }
 
+                // Wait before next checking for available chars
                 delay(SERIAL_POLL_DELAY);
             }
-        }
+        } // start
 
     private:
-        // Serial poll delay should be as short as possible. Gaps between inputs are handled by noInputTime.
-        uint8_t SERIAL_POLL_DELAY = 5;
-
-        // Speeds are set to minimum and maximum that the motors support (without stall), should not need adjustment
-        uint8_t FAST_SPEED = 100;
-        uint8_t SLOW_SPEED = 40;
+        // Storing volatile information about the current state of the robot
+        volatile uint8_t noInputTime = 0;
+        volatile char currentCommand = -1;
+        volatile int8_t speed = 0;
+        volatile char buffer = -1;
 
         Interactions interactions;
-        size_t noInputTime = 0;
-        char currentCommand = -1;
-        int8_t speed = 0;
-        char buffer = -1;
-        
-        
-};
+}; // Interactions
 
 
 class CommandInterface {
@@ -261,7 +271,7 @@ class CommandInterface {
             } else if ( memcmp(&currentCommand, &searchCommand, 6) == 0 ) {
                 interactions.search();
             }
-        }
+        } // console
 
     private:
         // Store the known commands in memory to allow comparisons later
@@ -272,6 +282,11 @@ class CommandInterface {
         const char distanceCommand[9] = "distance";
         const char stopCommand[5] = "stop";
         const char searchCommand[7] = "search";
+
+        // Define buffers to store the current char, current command and it's length
+        size_t commandLength = 0;
+        volatile char buffer = -1;
+        char currentCommand[32] = {0};
 
         Interactions interactions;
         Control control;
@@ -297,19 +312,12 @@ class CommandInterface {
                 }
 
             } 
+
             // Break on newline or carriage return
             while (buffer != 10 && buffer != 13);
             currentCommand[commandLength] = '\0';
-        }
-
-    private:
-        // Define the buffers to store the current char, current command and it's length
-        size_t commandLength = 0;
-        char buffer = -1;
-        char currentCommand[32] = {0};
-
-
-};
+        } // readToBuffer
+}; // CommandInterface
 
 
 void setup() 
@@ -336,7 +344,8 @@ void setup()
     Serial.print("Robot Connected! Type 'help' for a list of commands\n\n\r");
     commandInterface.console();
   
-}
+} // setup
+
 
 // Unsure if this needs to remain defined, to be tested later today
 void loop() 

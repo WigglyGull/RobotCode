@@ -7,6 +7,7 @@
 *   - "Accurate" forward, reverse and turn functions for use with two motors and two rotary encoders.
 *   - The ability to set offsets the power of each motor, used by all motion functions, to offset
 *     unbalanced velocities on each wheel.  
+*   - Indicator LED support
 *
 * Copyright 2024 C. Varney, A. Walker, S. Baynes
 * Free software under a MIT-0 license (see LICENSE.txt or https://github.com/aws/mit-0)
@@ -22,8 +23,8 @@
 class DualMotorControl {
   public:
     // Initialiser
-    DualMotorControl( UcTTDcMotor* leftMotor, UcTTDcMotor* rightMotor, int leftEncoder, int rightEncoder) : 
-                      leftMotor(leftMotor), rightMotor(rightMotor), leftEncoder(leftEncoder), rightEncoder(rightEncoder) { };
+    DualMotorControl( UcTTDcMotor* leftMotor, UcTTDcMotor* rightMotor, int leftEncoder, int rightEncoder, int forwardLed, int turnLed) : 
+                      leftMotor(leftMotor), rightMotor(rightMotor), leftEncoder(leftEncoder), rightEncoder(rightEncoder), forwardLed(forwardLed), turnLed(turnLed) { };
     
     // Basic movement functions 
     void forward(uint8_t speed);
@@ -53,7 +54,9 @@ class DualMotorControl {
     int rightEncoder;
     float leftDutyOffset = 1;
     float rightDutyOffset = 1;
-    
+    int forwardLed;
+    int turnLed;
+
     // Internal functions to control motion
     void stepMotor(UcTTDcMotor motor, int encoder, bool reverse, uint8_t steps);
     void stepDualMotor(bool reverse, bool pivot, uint8_t steps);

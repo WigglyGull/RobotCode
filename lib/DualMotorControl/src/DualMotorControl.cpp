@@ -7,6 +7,7 @@
 *   - "Accurate" forward, reverse and turn functions for use with two motors and two rotary encoders.
 *   - The ability to set offsets the power of each motor, used by all motion functions, to offset
 *     unbalanced velocities on each wheel.  
+*   - Indicator LED support
 *
 * Copyright 2024 C. Varney, A. Walker, S. Baynes
 * Free software under a MIT-0 license (see LICENSE.txt or https://github.com/aws/mit-0)
@@ -59,21 +60,23 @@ void DualMotorControl::stepDualMotor(bool reverse, bool pivot, uint8_t steps)
     bool lockLeft = 0;
     bool lockRight = 0;
 
-    // Set the motors moving in the directions defined by reverse and pivot booleans
+    // Set the motors moving in the directions defined by reverse and pivot booleans, and turn on the associated LEDs
     if ( reverse ) {
         if ( pivot ) {
+            digitalWrite(DualMotorControl::turnLed, 1);
             DualMotorControl::rightMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
         } else {
-            
+            digitalWrite(DualMotorControl::forwardLed, 1);
             DualMotorControl::rightMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
         }
         DualMotorControl::leftMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
         
     } else {
         if ( pivot ) {
+            digitalWrite(DualMotorControl::turnLed, 1);
             DualMotorControl::rightMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
-            
         } else {
+            digitalWrite(DualMotorControl::forwardLed, 1);
             DualMotorControl::rightMotor->reverse(DualMotorControl::MOTOR_DUTY_CYCLE);
         }
         DualMotorControl::leftMotor->forward(DualMotorControl::MOTOR_DUTY_CYCLE);
@@ -131,6 +134,7 @@ void DualMotorControl::turnRobotByDegrees(int8_t degrees)
     /* 
      * Pivot robot a defined number of degrees.
     */ 
+   digitalWrite(DualMotorControl::turnLed, 1);
     if (degrees > 0) {
         stepDualMotor(0, 1, degrees * DualMotorControl::CLICKS_PER_DEGREE);
     } else {
@@ -145,6 +149,7 @@ void DualMotorControl::forward(uint8_t speed)
      * Move the robot forwards, ignoring encoders.
     */ 
     stop();
+    digitalWrite(DualMotorControl::forwardLed, 1);
     DualMotorControl::leftMotor->forward((int) (speed * DualMotorControl::leftDutyOffset));
     DualMotorControl::rightMotor->reverse((int) (speed * DualMotorControl::rightDutyOffset));
 }
@@ -156,6 +161,7 @@ void DualMotorControl::reverse(uint8_t speed)
      * Move the robot backwards, ignoring encoders.
     */
     stop();
+    digitalWrite(DualMotorControl::forwardLed, 1);
     DualMotorControl::leftMotor->reverse((int) (speed * DualMotorControl::leftDutyOffset));
     DualMotorControl::rightMotor->forward((int) (speed * DualMotorControl::rightDutyOffset));
 }
@@ -166,6 +172,8 @@ void DualMotorControl::stop()
     /* 
      * Stop both motors.
     */
+    digitalWrite(DualMotorControl::forwardLed, 0);
+    digitalWrite(DualMotorControl::turnLed, 0);
     DualMotorControl::leftMotor->stop();
     DualMotorControl::rightMotor->stop();
 }
@@ -194,6 +202,7 @@ void DualMotorControl::turnRight(uint8_t speed)
     * Turns the robot to the right at a set speed
     */
     stop();
+    digitalWrite(DualMotorControl::turnLed, 1);
     DualMotorControl::leftMotor->forward((int) (speed * DualMotorControl::leftDutyOffset));
     DualMotorControl::rightMotor->forward((int) (speed * DualMotorControl::rightDutyOffset));
 
@@ -206,6 +215,7 @@ void DualMotorControl::turnLeft(uint8_t speed)
     * Turns the robot to the left at a set speed
     */
     stop();
+    digitalWrite(DualMotorControl::turnLed, 1);
     DualMotorControl::leftMotor->reverse((int) (speed * DualMotorControl::leftDutyOffset));
     DualMotorControl::rightMotor->reverse((int) (speed * DualMotorControl::rightDutyOffset));
 }
