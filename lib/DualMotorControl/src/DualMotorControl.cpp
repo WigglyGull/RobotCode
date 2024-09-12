@@ -5,6 +5,8 @@
 * Adds the following functionality:
 *   - "Fast" forward, reverse and turn functions for use with two motors.
 *   - "Accurate" forward, reverse and turn functions for use with two motors and two rotary encoders.
+*   - The ability to set offsets the power of each motor, used by all motion functions, to offset
+*     unbalanced velocities on each wheel.  
 *
 * Copyright 2024 C. Varney, A. Walker, S. Baynes
 * Free software under a MIT-0 license (see LICENSE.txt or https://github.com/aws/mit-0)
@@ -124,7 +126,6 @@ void DualMotorControl::moveRobot(int8_t steps)
     }
 }
 
-
 void DualMotorControl::turnRobotByDegrees(int8_t degrees)
 {
     /* 
@@ -136,6 +137,7 @@ void DualMotorControl::turnRobotByDegrees(int8_t degrees)
         stepDualMotor(1, 1, -1 * degrees * DualMotorControl::CLICKS_PER_DEGREE);
     }
 }
+
 
 void DualMotorControl::forward(uint8_t speed)
 {
@@ -172,7 +174,7 @@ void DualMotorControl::setLeftDutyOffset(float offset)
 {
     /*
     * Set a multiplier (between 0 and 1) for the duty cycle of the L motor
-    * Allows compensation for a drunk robot
+    * Allows compensation for 
     */
     DualMotorControl::leftDutyOffset = offset;
 }
@@ -186,15 +188,23 @@ void DualMotorControl::setRightDutyOffset(float offset)
     DualMotorControl::rightDutyOffset = offset;
 }
 
-void DualMotorControl::turnLeft(uint8_t speed)
+void DualMotorControl::turnRight(uint8_t speed)
 {
+    /*
+    * Turns the robot to the right at a set speed
+    */
     stop();
     DualMotorControl::leftMotor->forward((int) (speed * DualMotorControl::leftDutyOffset));
     DualMotorControl::rightMotor->forward((int) (speed * DualMotorControl::rightDutyOffset));
 
 }
-void DualMotorControl::turnRight(uint8_t speed)
+
+
+void DualMotorControl::turnLeft(uint8_t speed)
 {
+    /*
+    * Turns the robot to the left at a set speed
+    */
     stop();
     DualMotorControl::leftMotor->reverse((int) (speed * DualMotorControl::leftDutyOffset));
     DualMotorControl::rightMotor->reverse((int) (speed * DualMotorControl::rightDutyOffset));
